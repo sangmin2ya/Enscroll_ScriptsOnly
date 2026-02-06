@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7946774f9a6bc514aad0329a4dd0a6e6
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - currentScroll: {instanceID: 0}
+  - _scrollSavePointPrefab: {fileID: 7212648605685939491, guid: b56897636f1b3a446b02ca315e2e99c3,
+      type: 3}
+  - _scrollSavePoint: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
