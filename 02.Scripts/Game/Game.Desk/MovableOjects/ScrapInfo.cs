@@ -13,7 +13,7 @@ public class ScrapInfo
     {
         get { return questId; }
     }
-    private string name => names[(int)GameData.Instance.langauage];
+    private string name => names[(int)GameData.Instance.language];
     private List<string> names;
     public string Name
     {
@@ -34,7 +34,7 @@ public class ScrapInfo
     {
         get { return readRequests; }
     }
-    private List<string> summaries => summariesPerLanguage[(int)GameData.Instance.langauage];
+    private List<string> summaries => summariesPerLanguage[(int)GameData.Instance.language];
     private List<List<string>> summariesPerLanguage;
     public List<string> Summaries
     {
@@ -70,16 +70,16 @@ public class ScrapInfo
 
     public void AddRequest(RequestInfo requestInfo)
     {
-        string path = string.Format("Prefabs/QuestLetter/Request/{0}/{1}", GameData.Instance.langauage, requestInfo.Id);
-        readRequests[int.Parse(requestInfo.Id.Split('_')[1].Substring(0, 1))] = true;
+        string path = string.Format("Prefabs/QuestLetter/Request/{0}/{1}", GameData.Instance.language, requestInfo.Id);
+        readRequests[RequestCsv.ParseQuestIndex(requestInfo.Id)] = true;
         GameObject go = Resources.Load<GameObject>(path);
-        requests[int.Parse(requestInfo.Id.Split('_')[1].Substring(0, 1))] = go;
+        requests[RequestCsv.ParseQuestIndex(requestInfo.Id)] = go;
     }
 
     public void AddReply(ReplySheet replySheet)
     {
         completeReplies[replySheet.questIndex] = true;
-        string path = string.Format("Prefabs/QuestLetter/Reply/{0}/{1}", GameData.Instance.langauage, replySheet.name.Replace("(Clone)", ""));
+        string path = string.Format("Prefabs/QuestLetter/Reply/{0}/{1}", GameData.Instance.language, replySheet.name.Replace("(Clone)", ""));
         GameObject go = Resources.Load<GameObject>(path);
         replies[replySheet.questIndex] = go;
     }
@@ -96,7 +96,7 @@ public class ScrapInfo
         summariesPerLanguage.Add(new List<string>());
         summariesPerLanguage.Add(new List<string>());
         summariesPerLanguage.Add(new List<string>());
-        summariesPerLanguage[(int)Langauage.Kor].AddRange(new List<string>
+        summariesPerLanguage[(int)Language.Kor].AddRange(new List<string>
         {
             FormatString((string)data["Summary0_Kor"]),
             FormatString((string)data["Summary1_Kor"]),
@@ -104,7 +104,7 @@ public class ScrapInfo
             FormatString((string)data["Summary3_Kor"]),
             FormatString((string)data["Summary4_Kor"]),
         });
-        summariesPerLanguage[(int)Langauage.Eng].AddRange(new List<string>
+        summariesPerLanguage[(int)Language.Eng].AddRange(new List<string>
         {
             FormatString((string)data["Summary0_Eng"]),
             FormatString((string)data["Summary1_Eng"]),
@@ -112,7 +112,7 @@ public class ScrapInfo
             FormatString((string)data["Summary3_Eng"]),
             FormatString((string)data["Summary4_Eng"]),
         });
-        summariesPerLanguage[(int)Langauage.Jp].AddRange(new List<string>
+        summariesPerLanguage[(int)Language.Jp].AddRange(new List<string>
         {
             FormatString((string)data["Summary0_Jp"]),
             FormatString((string)data["Summary1_Jp"]),

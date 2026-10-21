@@ -26,7 +26,7 @@ namespace Game.Element
             // set { _id = value; }
         }
 
-        [SerializeField] private string _name => _names[(int)GameData.Instance.langauage];
+        [SerializeField] private string _name => _names[(int)GameData.Instance.language];
         public string name
         {
             get { return _name; }
@@ -65,9 +65,9 @@ namespace Game.Element
             names.Add("");
             names.Add("");
             names.Add("");
-            names[(int)Langauage.Kor] = data["Name_Kor"].ToString();
-            names[(int)Langauage.Eng] = data["Name_Eng"].ToString();
-            names[(int)Langauage.Jp] = data["Name_Jp"].ToString();
+            names[(int)Language.Kor] = data["Name_Kor"].ToString();
+            names[(int)Language.Eng] = data["Name_Eng"].ToString();
+            names[(int)Language.Jp] = data["Name_Jp"].ToString();
 
             return new ElementInfo(id, names);
         }

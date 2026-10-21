@@ -55,15 +55,15 @@ namespace Game.Desk
             transform.DOLocalMove(transform.localPosition + randomTargetPos, 1f).SetEase(Ease.OutExpo);
             RequestManager.Instance.Stamp.EndingLetterUI = this.GetComponent<RectTransform>();
 
-            switch (GameData.Instance.langauage)
+            switch (GameData.Instance.language)
             {
-                case Langauage.Kor:
+                case Language.Kor:
                     resultImage.sprite = KoreanImage;
                     break;
-                case Langauage.Eng:
+                case Language.Eng:
                     resultImage.sprite = EnglishImage;
                     break;
-                case Langauage.Jp:
+                case Language.Jp:
                     resultImage.sprite = JapaneseImage;
                     break;
                 default:

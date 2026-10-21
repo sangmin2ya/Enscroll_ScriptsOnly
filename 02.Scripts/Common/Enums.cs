@@ -26,7 +26,8 @@ public enum ReplyType
     주문서, 편지, 공고, 메모
 }
 
-public enum Langauage
+// 값은 0부터 연속이어야 함 (의뢰 데이터 Content_{이름} 컬럼, 로케일 인덱스, Resources 폴더 이름에 사용)
+public enum Language
 {
     Kor = 0,
     Eng = 1,

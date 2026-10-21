@@ -23,15 +23,15 @@ public class PaymentResultLetter : MonoBehaviour, IPointerClickHandler
     void Start()
     {
         _rectTransform = GetComponent<RectTransform>();
-        switch (GameData.Instance.langauage)
+        switch (GameData.Instance.language)
         {
-            case Langauage.Kor:
+            case Language.Kor:
                 paymentResultImage.sprite = KoreanImageList[GameData.Instance.FinalResultCode];
                 break;
-            case Langauage.Eng:
+            case Language.Eng:
                 paymentResultImage.sprite = EnglishImageList[GameData.Instance.FinalResultCode];
                 break;
-            case Langauage.Jp:
+            case Language.Jp:
                 paymentResultImage.sprite = JapaneseImageList[GameData.Instance.FinalResultCode];
                 break;
             default:

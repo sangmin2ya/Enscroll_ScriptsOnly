@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Game.Request;
 using UnityEngine;
+using UnityEngine.Serialization;
 using System.Linq;
 using UnityEngine.Localization.Settings;
 using Game.Board;
@@ -39,7 +40,8 @@ public class GameData : Singleton<GameData>
     }
 
     [Header("언어")]
-    public Langauage langauage = Langauage.Eng;
+    [FormerlySerializedAs("langauage")]
+    public Language language = Language.Eng;
 
     [Header("퀘스트 라인")]
     // 1 = 성공, 2 = 실패, 0 = 아직 안함, 
@@ -157,26 +159,26 @@ public class GameData : Singleton<GameData>
         SettingInfo = SaveManager.LoadSetting();
 
         if (SettingInfo != null)
-            langauage = (Langauage)SettingInfo.language;
+            language = (Language)SettingInfo.language;
         else
         {
             SetLanguageAsApplication();
         }
-        LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[(int)langauage];
+        LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[(int)language];
     }
     private void SetLanguageAsApplication()
     {
         if (Application.systemLanguage == SystemLanguage.Korean)
         {
-            langauage = Langauage.Kor;
+            language = Language.Kor;
         }
         else if (Application.systemLanguage == SystemLanguage.Japanese)
         {
-            langauage = Langauage.Jp;
+            language = Language.Jp;
         }
         else
         {
-            langauage = Langauage.Eng;
+            language = Language.Eng;
         }
     }
     #endregion

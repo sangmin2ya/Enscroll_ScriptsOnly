@@ -32,7 +32,7 @@ public class ReplySheet : MonoBehaviour, IPointerClickHandler
 
     void Start()
     {
-        questIndex = int.Parse(gameObject.name.Split('_')[1].Substring(0, 1));
+        questIndex = RequestCsv.ParseQuestIndex(gameObject.name);
 
         _canvas = GetComponentInParent<Canvas>();
         _rectTransform = GetComponent<RectTransform>();

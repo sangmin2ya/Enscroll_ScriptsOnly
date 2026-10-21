@@ -32,7 +32,7 @@ public class SettingMenu : MonoBehaviour
 
     void Awake()
     {
-        nowLanguage = (int)GameData.Instance.langauage;
+        nowLanguage = (int)GameData.Instance.language;
 
         languageBtn.onClick.AddListener(ToggleLanguages);
         resolution.onClick.AddListener(ChangeWindowMode);
@@ -146,7 +146,7 @@ public class SettingMenu : MonoBehaviour
     {
         nowLanguage = index;
         LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[nowLanguage];
-        GameData.Instance.langauage = (Langauage)nowLanguage;
+        GameData.Instance.language = (Language)nowLanguage;
 
         languagePanel.SetActive(false);
 

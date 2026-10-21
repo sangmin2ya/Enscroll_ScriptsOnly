@@ -93,8 +93,8 @@ public class SaveManager : Singleton<SaveManager>
 
         Dictionary<string, object> data = new Dictionary<string, object>();
 
-        int langauage = (int)GameData.Instance.langauage;
-        data["Language"] = langauage;
+        int language = (int)GameData.Instance.language;
+        data["Language"] = language;
         float BGMSoundRatio = SoundManager.Instance.GetBGMVolume();
         data["BGMSoundRatio"] = BGMSoundRatio;
         float SFXSoundRatio = SoundManager.Instance.GetSFXVolume();

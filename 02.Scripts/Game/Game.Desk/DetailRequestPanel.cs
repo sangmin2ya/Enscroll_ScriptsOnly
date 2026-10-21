@@ -36,7 +36,7 @@ namespace Game.Desk
             if (requestInfo is NormalRequestInfo normalRequest)
                 detailedRequestObject = Instantiate(DeskManager.Instance.GetRequestPrefab(normalRequest), requestPrefabParent);
             else if (requestInfo is SpecialRequestInfo specialRequest)
-                detailedRequestObject = Instantiate(Resources.Load<GameObject>(string.Format("Prefabs/QuestLetter/Request/{0}/{1}", GameData.Instance.langauage, specialRequest.Id)), requestPrefabParent);
+                detailedRequestObject = Instantiate(Resources.Load<GameObject>(string.Format("Prefabs/QuestLetter/Request/{0}/{1}", GameData.Instance.language, specialRequest.Id)), requestPrefabParent);
 
             // 확대 보기 후 제자리 돌아가기 위한 의뢰칸 설정
             //detailedRequestObject.GetComponent<RequestSheet>().OrderSheetPlace = requestSheetPlace.GetComponent<RectTransform>();

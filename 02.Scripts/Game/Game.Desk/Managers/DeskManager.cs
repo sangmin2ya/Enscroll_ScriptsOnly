@@ -216,7 +216,7 @@ namespace Game.Desk
             // 특수 의뢰
             else if (request is SpecialRequestInfo sRequest)
             {
-                string path = string.Format("Prefabs/QuestLetter/Request/{0}/{1}", GameData.Instance.langauage, sRequest.Id);
+                string path = string.Format("Prefabs/QuestLetter/Request/{0}/{1}", GameData.Instance.language, sRequest.Id);
                 orderSheet = Instantiate(Resources.Load<GameObject>(path), deskCanvas).GetComponent<RectTransform>();
                 _currentOrderSheet = orderSheet?.GetComponent<RequestSheet>();
                 _currentScroll.RequestSheetPlace = orderSheet;
@@ -326,13 +326,13 @@ namespace Game.Desk
 
         public TMP_FontAsset GetRequestFont(int type)
         {
-            switch (GameData.Instance.langauage)
+            switch (GameData.Instance.language)
             {
-                case Langauage.Kor:
-                case Langauage.Eng:
+                case Language.Kor:
+                case Language.Eng:
                     return fonts[type];
 
-                case Langauage.Jp:
+                case Language.Jp:
                     return fonts_jp[type];
 
                 default:

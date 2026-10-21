@@ -26,7 +26,7 @@ public class TitleManager : Singleton<TitleManager>
 
     void Awake()
     {
-        // nowLanguage = (int)GameData.Instance.langauage;
+        // nowLanguage = (int)GameData.Instance.language;
         // LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[nowLanguage];
         fadeInImage.DOFade(0, 1.5f).SetEase(Ease.InQuart).OnComplete(() => fadeInImage.gameObject.SetActive(false));
     }
@@ -103,7 +103,7 @@ public class TitleManager : Singleton<TitleManager>
         // LocalizationSettings.InitializationOperation;
         // Setting the locale using the singleton instance
         LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[nowLanguage];
-        GameData.Instance.langauage = (Langauage)nowLanguage;
+        GameData.Instance.language = (Language)nowLanguage;
     }
 
     public void QuitGame()

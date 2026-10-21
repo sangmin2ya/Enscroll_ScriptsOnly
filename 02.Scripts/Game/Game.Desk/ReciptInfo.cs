@@ -18,7 +18,7 @@ public class ReciptInfo
         get { return questId; }
     }
 
-    private string content => contents[(int)GameData.Instance.langauage];
+    private string content => contents[(int)GameData.Instance.language];
     public string Content
     {
         get { return content; }

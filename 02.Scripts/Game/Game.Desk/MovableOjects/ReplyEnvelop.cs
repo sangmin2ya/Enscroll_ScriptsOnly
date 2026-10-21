@@ -72,7 +72,7 @@ namespace Game.Desk
         }
         private GameObject SpawnInsideArea(RequestResult request)
         {
-            string path = string.Format("Prefabs/QuestLetter/Reply/{0}/{1}", GameData.Instance.langauage, request.replyId);
+            string path = string.Format("Prefabs/QuestLetter/Reply/{0}/{1}", GameData.Instance.language, request.replyId);
             GameObject replySheet = Instantiate(Resources.Load<ReplySheet>(path), CanvasManager.Instance.MainDeskUI).gameObject;
 
             replySheet.GetComponent<RectTransform>().position = GetComponent<RectTransform>().position; ;

@@ -110,13 +110,13 @@ public class LetterSpawner : MonoBehaviour
 
     public TMP_FontAsset GetRequestFont(int type)
     {
-        switch (GameData.Instance.langauage)
+        switch (GameData.Instance.language)
         {
-            case Langauage.Kor:
-            case Langauage.Eng:
+            case Language.Kor:
+            case Language.Eng:
                 return fonts[type];
 
-            case Langauage.Jp:
+            case Language.Jp:
                 return fonts_jp[type];
 
             default:
