@@ -7,7 +7,7 @@ using Game.Tutorial;
 
 namespace Game.Desk
 {
-    public class RequestSheet : MonoBehaviour, IPointerClickHandler
+    public class RequestSheet : MonoBehaviour, IPointerClickHandler, IDeskItem
     {
         [SerializeField]
         private Scroll currentScroll;
@@ -20,6 +20,11 @@ namespace Game.Desk
             get { return _scrollSavePoint; }
         }
         private bool _isPlacedOnDesk = true;
+        // IDeskItem: DragableObject가 제출/서랍 복귀 시 호출
+        bool IDeskItem.CanSubmit => true;
+        void IDeskItem.OnSubmitted() { SendScroll(); }
+        void IDeskItem.OnReturnedToDrawer() { }
+
         public bool IsPlacedOnDesk
         {
             get { return _isPlacedOnDesk; }

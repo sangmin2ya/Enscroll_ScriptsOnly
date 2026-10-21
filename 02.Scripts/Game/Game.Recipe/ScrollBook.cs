@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ScrollBook : MonoBehaviour, IPointerClickHandler
+public class ScrollBook : MonoBehaviour, IPointerClickHandler, IDeskItem
 {
     [Header("페이지 정보")]
     [SerializeField] private int maxLevelPage = 0;
@@ -57,6 +57,11 @@ public class ScrollBook : MonoBehaviour, IPointerClickHandler
     private bool _isPlacedOnDesk = false;
     private bool _isOpen = false;
     public bool IsOpen => _isOpen;
+    // IDeskItem: DragableObject가 제출/서랍 복귀 시 호출
+    bool IDeskItem.CanSubmit => false;
+    void IDeskItem.OnSubmitted() { }
+    void IDeskItem.OnReturnedToDrawer() { CloseFile(); }
+
     public bool IsPlacedOnDesk
     {
         get { return _isPlacedOnDesk; }

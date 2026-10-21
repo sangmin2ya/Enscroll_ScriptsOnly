@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace Game.Desk
 {
-    public class FileController : MonoBehaviour, IPointerClickHandler
+    public class FileController : MonoBehaviour, IPointerClickHandler, IDeskItem
     {
         [SerializeField]
         private Button fileCloseButton;
@@ -16,6 +16,11 @@ namespace Game.Desk
         private bool _isPlacedOnDesk = false;
         private bool _isOpen = false;
         public bool IsOpen => _isOpen;
+        // IDeskItem: DragableObject가 제출/서랍 복귀 시 호출
+        bool IDeskItem.CanSubmit => false;
+        void IDeskItem.OnSubmitted() { }
+        void IDeskItem.OnReturnedToDrawer() { }
+
         public bool IsPlacedOnDesk
         {
             get { return _isPlacedOnDesk; }

@@ -11,7 +11,7 @@ namespace Game.Desk
     {
         GOOD, BAD
     }
-    public class EndingLetter : MonoBehaviour, IPointerClickHandler
+    public class EndingLetter : MonoBehaviour, IPointerClickHandler, IDeskItem
     {
         [Header("엔딩 코드")]
         [SerializeField]
@@ -96,6 +96,12 @@ namespace Game.Desk
         #region ZoomInZoomOut
         private Vector2 _previousPosition;
         private bool _isPlacedOnDesk = true;
+        // IDeskItem: DragableObject가 제출/서랍 복귀 시 호출
+        // 배드 엔딩은 도장을 찍어야 제출 가능
+        bool IDeskItem.CanSubmit => !(!IsStamped && EndingType == endingType.BAD);
+        void IDeskItem.OnSubmitted() { SendLetter(); }
+        void IDeskItem.OnReturnedToDrawer() { }
+
         public bool IsPlacedOnDesk
         {
             get { return _isPlacedOnDesk; }

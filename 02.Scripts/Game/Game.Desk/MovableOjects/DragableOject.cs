@@ -3,7 +3,6 @@ using UnityEngine.EventSystems;
 using DG.Tweening;
 using UnityEngine.UI;
 using Game.Request;
-using Unity.Burst.Intrinsics;
 using Game.Scroll;
 using System.Collections;
 
@@ -69,12 +68,32 @@ namespace Game.Desk
         private bool isStampOnScroll = false;
         private bool isStampOnLetter = false;
 
+        // 공통 드래그 외의 오브젝트별 동작 (의뢰서, 납부서, 엔딩 편지, 스크랩북, 파일)
+        // 오브젝트마다 IDeskItem 구현 컴포넌트는 objectType에 맞는 하나만 붙어 있다고 가정
+        private IDeskItem[] deskItems;
+        private Image image;
+        private GameObject innerContent;
+        // 처음 사용할 때 한 번만 찾아서 캐싱
+        private GameObject InnerContent
+        {
+            get
+            {
+                if (innerContent == null)
+                {
+                    innerContent = transform.Find("내부컨텐츠").gameObject;
+                }
+                return innerContent;
+            }
+        }
+
         void Awake()
         {
             mainDeskUI = CanvasManager.Instance.MainDeskUI;
             rightUI = CanvasManager.Instance.RightUI;
             submitUI = CanvasManager.Instance.SubmitUI;
 
+            deskItems = GetComponents<IDeskItem>();
+            image = GetComponent<Image>();
             rectTransform = GetComponent<RectTransform>();
             mainCamera = Camera.main;
             currentParent = mainDeskUI; // 초기 부모는 메인 책상
@@ -104,54 +123,11 @@ namespace Game.Desk
             }
             if (currentParent == submitUI)
             {
-                // 제출 영역에 있는 경우
-                // 스케일과 스프라이트 복원
-                // rectTransform.DOScale(rightUIScale, 0.2f).SetEase(Ease.OutQuad);
-                // GetComponent<RequestSheet>()?.SendScroll();
-                // GetComponent<Payment>()?.SendPayment();
-                // GetComponent<EndingLetter>()?.SendLetter();
+                // 제출 영역에 있는 경우: 제출은 OnEndDrag에서 처리
             }
             else if (currentParent == rightUI)
             {
-                if (objectType == InteractablePositionType.납부서)
-                {
-                    rectTransform.DOScale(new Vector3(rightUIScale.x, rightUIScale.x, 1), 0.2f).SetEase(Ease.OutQuad);
-                }
-                else
-                {
-                    rectTransform.DOScale(rightUIScale, 0.2f).SetEase(Ease.OutQuad);
-                }
-                // 우측 UI로 되돌리기
-                // 물약이면 이 시점에 물약 Index에 따라 자리 설정
-                if (objectType == InteractablePositionType.물약)
-                {
-                    rightUIPosition = CanvasManager.Instance.GetUIPositionOfObject(objectType, this);
-                }
-                if (objectType == InteractablePositionType.스크랩북)
-                {
-                    GetComponent<ScrollBook>().CloseFile();
-                }
-                if (objectType == InteractablePositionType.인장)
-                {
-                    rectTransform.DORotate(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
-                }
-
-                if (objectType != InteractablePositionType.답장)
-                {
-                    rectTransform.DOMove(rightUIPosition.position, 0.5f).SetEase(Ease.OutQuad);
-                    if (objectType == InteractablePositionType.의뢰)
-                    {
-                        GetComponent<RequestSheet>().IsPlacedOnDesk = false;
-                    }
-                    if (objectType == InteractablePositionType.납부서)
-                    {
-                        GetComponent<Payment>().IsPlacedOnDesk = false;
-                    }
-                    if (objectType == InteractablePositionType.엔딩)
-                    {
-                        GetComponent<EndingLetter>().IsPlacedOnDesk = false;
-                    }
-                }
+                ReturnToDrawer(resetStampHitTest: false);
             }
         }
         public void OnPointerDown(PointerEventData eventData)
@@ -229,7 +205,7 @@ namespace Game.Desk
         private IEnumerator ReturnStampSprite()
         {
             yield return new WaitForSeconds(0.6f);
-            GetComponent<Image>().sprite = deskSprite;
+            image.sprite = deskSprite;
         }
         public void OnEndDrag(PointerEventData eventData)
         {
@@ -247,7 +223,7 @@ namespace Game.Desk
                 rectTransform.DOScale(deskScale, 0.2f).SetEase(Ease.OutQuad);
                 if (objectType == InteractablePositionType.인장)
                 {
-                    GetComponent<Image>().alphaHitTestMinimumThreshold = 0.1f;
+                    image.alphaHitTestMinimumThreshold = 0.1f;
                 }
             }
             if (isStampOnScroll)
@@ -278,7 +254,7 @@ namespace Game.Desk
                     {
                         rectTransform.DOScale(1, 0.2f).SetEase(Ease.OutQuad).OnComplete(() =>
                         {
-                            GetComponent<Image>().sprite = deskSprite;
+                            image.sprite = deskSprite;
                         });
                     });
                 });
@@ -288,52 +264,95 @@ namespace Game.Desk
                 // 제출 영역에 있는 경우
                 // 스케일과 스프라이트 복원
                 rectTransform.DOScale(rightUIScale, 0.2f).SetEase(Ease.OutQuad);
-                GetComponent<RequestSheet>()?.SendScroll();
-                GetComponent<Payment>()?.SendPayment();
-                GetComponent<EndingLetter>()?.SendLetter();
+                foreach (IDeskItem item in deskItems)
+                {
+                    item.OnSubmitted();
+                }
             }
             else if (currentParent == rightUI)
             {
-                if (objectType == InteractablePositionType.납부서)
+                ReturnToDrawer(resetStampHitTest: true);
+            }
+        }
+
+        /// <summary>
+        /// 드래그를 놓은 곳이 우측 서랍이면 크기를 줄이고 서랍 자리로 되돌림
+        /// </summary>
+        private void ReturnToDrawer(bool resetStampHitTest)
+        {
+            if (objectType == InteractablePositionType.납부서)
+            {
+                rectTransform.DOScale(new Vector3(rightUIScale.x, rightUIScale.x, 1), 0.2f).SetEase(Ease.OutQuad);
+            }
+            else
+            {
+                rectTransform.DOScale(rightUIScale, 0.2f).SetEase(Ease.OutQuad);
+            }
+            // 우측 UI로 되돌리기
+            // 물약이면 이 시점에 물약 Index에 따라 자리 설정
+            if (objectType == InteractablePositionType.물약)
+            {
+                rightUIPosition = CanvasManager.Instance.GetUIPositionOfObject(objectType, this);
+            }
+            foreach (IDeskItem item in deskItems)
+            {
+                item.OnReturnedToDrawer();
+            }
+            if (objectType == InteractablePositionType.인장)
+            {
+                rectTransform.DORotate(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
+                if (resetStampHitTest)
                 {
-                    rectTransform.DOScale(new Vector3(rightUIScale.x, rightUIScale.x, 1), 0.2f).SetEase(Ease.OutQuad);
-                }
-                else
-                {
-                    rectTransform.DOScale(rightUIScale, 0.2f).SetEase(Ease.OutQuad);
-                }
-                // 우측 UI로 되돌리기
-                // 물약이면 이 시점에 물약 Index에 따라 자리 설정
-                if (objectType == InteractablePositionType.물약)
-                {
-                    rightUIPosition = CanvasManager.Instance.GetUIPositionOfObject(objectType, this);
-                }
-                if (objectType == InteractablePositionType.스크랩북)
-                {
-                    GetComponent<ScrollBook>().CloseFile();
-                }
-                if (objectType == InteractablePositionType.인장)
-                {
-                    rectTransform.DORotate(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
-                    GetComponent<Image>().alphaHitTestMinimumThreshold = 0;
-                }
-                if (objectType != InteractablePositionType.답장)
-                {
-                    rectTransform.DOMove(rightUIPosition.position, 0.5f).SetEase(Ease.OutQuad);
-                    if (objectType == InteractablePositionType.의뢰)
-                    {
-                        GetComponent<RequestSheet>().IsPlacedOnDesk = false;
-                    }
-                    if (objectType == InteractablePositionType.납부서)
-                    {
-                        GetComponent<Payment>().IsPlacedOnDesk = false;
-                    }
-                    if (objectType == InteractablePositionType.엔딩)
-                    {
-                        GetComponent<EndingLetter>().IsPlacedOnDesk = false;
-                    }
+                    image.alphaHitTestMinimumThreshold = 0;
                 }
             }
+            if (objectType != InteractablePositionType.답장)
+            {
+                rectTransform.DOMove(rightUIPosition.position, 0.5f).SetEase(Ease.OutQuad);
+                if (objectType == InteractablePositionType.의뢰 || objectType == InteractablePositionType.납부서 || objectType == InteractablePositionType.엔딩)
+                {
+                    SetPlacedOnDesk(false);
+                }
+            }
+        }
+
+        // 제출 가능 조건은 오브젝트별 IDeskItem이 판단 (의뢰서: 항상, 납부서: 납부일, 엔딩 편지: 배드 엔딩이면 도장 후)
+        private bool CanSubmit()
+        {
+            foreach (IDeskItem item in deskItems)
+            {
+                if (item.CanSubmit)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void SetPlacedOnDesk(bool isPlaced)
+        {
+            foreach (IDeskItem item in deskItems)
+            {
+                item.IsPlacedOnDesk = isPlaced;
+            }
+        }
+
+        /// <summary>
+        /// 제출 영역으로 옮김 (의뢰서, 납부서, 엔딩 편지 공통)
+        /// </summary>
+        private void MoveToSubmitArea()
+        {
+            SetPlacedOnDesk(false);
+            isOnSubmitArea = true;
+            currentParent = submitUI;
+            rectTransform.SetParent(RequestManager.Instance.SubmitArea.GetComponent<RectTransform>(), true);
+            rectTransform.localScale = rightUIScale * onClickScaler;
+            rectTransform.DOLocalMove(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
+
+            // 마우스 위치로 바로 이동
+            dragOffset = Vector3.zero;
+            image.sprite = rightUISprite;
+            InnerContent.SetActive(false);
         }
         /// <summary>
         /// 추후에 날 바뀌면 모든 오브젝트 서럽 안으로 ㄴ ㅓㅎ어주는 메소드.
@@ -384,77 +403,12 @@ namespace Game.Desk
             {
                 endingLetterUI.GetWorldCorners(endingLetterCorners);
             }
-            // 의뢰, 납부서면서 제출 영역 위에 있는 경우
-            if (objectType != InteractablePositionType.기타 && IsWithinBounds(mousePosition, submitAreaCorners) && (objectType == InteractablePositionType.의뢰 || (objectType == InteractablePositionType.납부서 && RequestManager.Instance.isPaymentDay)
-                || objectType == InteractablePositionType.엔딩 && !(!GetComponent<EndingLetter>().IsStamped && GetComponent<EndingLetter>().EndingType == endingType.BAD)))
+            // 제출 가능한 오브젝트(IDeskItem.CanSubmit)가 제출 영역 위에 있는 경우
+            if (objectType != InteractablePositionType.기타 && IsWithinBounds(mousePosition, submitAreaCorners) && CanSubmit())
             {
-                if (objectType == InteractablePositionType.의뢰)
+                if (currentParent != submitUI)
                 {
-                    if (currentParent != submitUI)
-                    {
-                        if (GetComponent<RequestSheet>() != null)
-                        {
-                            GetComponent<RequestSheet>().IsPlacedOnDesk = false;
-                        }
-                        if (GetComponent<EndingLetter>() != null)
-                        {
-                            GetComponent<EndingLetter>().IsPlacedOnDesk = false;
-                        }
-                        if (GetComponent<Payment>() != null)
-                        {
-                            GetComponent<Payment>().IsPlacedOnDesk = false;
-                        }
-                        isOnSubmitArea = true;
-                        currentParent = submitUI;
-                        rectTransform.SetParent(RequestManager.Instance.SubmitArea.GetComponent<RectTransform>(), true);
-                        rectTransform.localScale = rightUIScale * onClickScaler;
-                        rectTransform.DOLocalMove(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
-
-                        // 마우스 위치로 바로 이동
-                        dragOffset = Vector3.zero;
-                        GetComponent<Image>().sprite = rightUISprite;
-                        transform.Find("내부컨텐츠").gameObject.SetActive(false);
-                    }
-                }
-                else if (objectType == InteractablePositionType.납부서 && RequestManager.Instance.isPaymentDay)
-                {
-                    if (currentParent != submitUI)
-                    {
-                        if (GetComponent<Payment>() != null)
-                        {
-                            GetComponent<Payment>().IsPlacedOnDesk = false;
-                        }
-                        isOnSubmitArea = true;
-                        currentParent = submitUI;
-                        rectTransform.SetParent(RequestManager.Instance.SubmitArea.GetComponent<RectTransform>(), true);
-                        rectTransform.localScale = rightUIScale * onClickScaler;
-                        rectTransform.DOLocalMove(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
-
-                        // 마우스 위치로 바로 이동
-                        dragOffset = Vector3.zero;
-                        GetComponent<Image>().sprite = rightUISprite;
-                        transform.Find("내부컨텐츠").gameObject.SetActive(false);
-                    }
-                }
-                else if (objectType == InteractablePositionType.엔딩)
-                {
-                    if (currentParent != submitUI)
-                    {
-                        if (GetComponent<EndingLetter>() != null)
-                        {
-                            GetComponent<EndingLetter>().IsPlacedOnDesk = false;
-                        }
-                        isOnSubmitArea = true;
-                        currentParent = submitUI;
-                        rectTransform.SetParent(RequestManager.Instance.SubmitArea.GetComponent<RectTransform>(), true);
-                        rectTransform.localScale = rightUIScale * onClickScaler;
-                        rectTransform.DOLocalMove(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
-
-                        // 마우스 위치로 바로 이동
-                        dragOffset = Vector3.zero;
-                        GetComponent<Image>().sprite = rightUISprite;
-                        transform.Find("내부컨텐츠").gameObject.SetActive(false);
-                    }
+                    MoveToSubmitArea();
                 }
             }
             // 우측 UI 영역 위에 있는 경우
@@ -462,26 +416,7 @@ namespace Game.Desk
             {
                 if (currentParent != rightUI)
                 {
-                    if (GetComponent<RequestSheet>() != null)
-                    {
-                        GetComponent<RequestSheet>().IsPlacedOnDesk = false;
-                    }
-                    if (GetComponent<FileController>() != null)
-                    {
-                        GetComponent<FileController>().IsPlacedOnDesk = false;
-                    }
-                    if (GetComponent<ScrollBook>() != null)
-                    {
-                        GetComponent<ScrollBook>().IsPlacedOnDesk = false;
-                    }
-                    if (GetComponent<EndingLetter>() != null)
-                    {
-                        GetComponent<EndingLetter>().IsPlacedOnDesk = false;
-                    }
-                    if (GetComponent<Payment>() != null)
-                    {
-                        GetComponent<Payment>().IsPlacedOnDesk = false;
-                    }
+                    SetPlacedOnDesk(false);
                     rectTransform.DOKill();
                     isOnSubmitArea = false;
                     currentParent = rightUI;
@@ -491,19 +426,19 @@ namespace Game.Desk
                     rectTransform.position = mousePosition + dragOffset;
                     if (objectType != InteractablePositionType.납부서)
                     {
-                        GetComponent<Image>().sprite = rightUISprite;
+                        image.sprite = rightUISprite;
                         rectTransform.localScale = rightUIScale * onClickScaler;
                     }
                     else
                     {
-                        GetComponent<Image>().sprite = deskSprite;
-                        transform.Find("내부컨텐츠").gameObject.SetActive(true);
+                        image.sprite = deskSprite;
+                        InnerContent.SetActive(true);
                         rectTransform.localScale = new Vector3(rightUIScale.x, rightUIScale.x, rightUIScale.z) * onClickScaler;
                     }
 
                     if (objectType == InteractablePositionType.의뢰 || objectType == InteractablePositionType.엔딩)
                     {
-                        transform.Find("내부컨텐츠").gameObject.SetActive(false);
+                        InnerContent.SetActive(false);
                     }
 
                 }
@@ -513,36 +448,17 @@ namespace Game.Desk
             {
                 if (currentParent != mainDeskUI)
                 {
-                    if (GetComponent<RequestSheet>() != null)
-                    {
-                        GetComponent<RequestSheet>().IsPlacedOnDesk = true;
-                    }
-                    if (GetComponent<FileController>() != null)
-                    {
-                        GetComponent<FileController>().IsPlacedOnDesk = true;
-                    }
-                    if (GetComponent<ScrollBook>() != null)
-                    {
-                        GetComponent<ScrollBook>().IsPlacedOnDesk = true;
-                    }
-                    if (GetComponent<EndingLetter>() != null)
-                    {
-                        GetComponent<EndingLetter>().IsPlacedOnDesk = true;
-                    }
-                    if (GetComponent<Payment>() != null)
-                    {
-                        GetComponent<Payment>().IsPlacedOnDesk = true;
-                    }
+                    SetPlacedOnDesk(true);
                     rectTransform.DOKill();
                     isOnSubmitArea = false;
                     currentParent = mainDeskUI;
                     rectTransform.SetParent(mainDeskUI, true);
                     rectTransform.localScale = deskScale * onClickScaler;
                     rectTransform.position = mousePosition + dragOffset;
-                    GetComponent<Image>().sprite = deskSprite;
+                    image.sprite = deskSprite;
                     if (objectType == InteractablePositionType.의뢰 || objectType == InteractablePositionType.납부서 || objectType == InteractablePositionType.엔딩)
                     {
-                        transform.Find("내부컨텐츠").gameObject.SetActive(true);
+                        InnerContent.SetActive(true);
                     }
                 }
                 if (objectType == InteractablePositionType.인장 && DeskManager.Instance.CurrentScroll != null)
@@ -553,7 +469,7 @@ namespace Game.Desk
                         if (IsWithinBounds(mousePosition, scrollUICorners))
                         {
                             //세움
-                            GetComponent<Image>().sprite = stampSprite;
+                            image.sprite = stampSprite;
                             dragOffset = Vector3.zero;
                             rectTransform.position = mousePosition + dragOffset;
                             isStampOnScroll = true;
@@ -561,7 +477,7 @@ namespace Game.Desk
                         else
                         {
                             rectTransform.DORotate(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
-                            GetComponent<Image>().sprite = deskSprite;
+                            image.sprite = deskSprite;
                             isStampOnScroll = false;
                         }
                     }
@@ -572,7 +488,7 @@ namespace Game.Desk
                     if (IsWithinBounds(mousePosition, endingLetterCorners))
                     {
                         //세움
-                        GetComponent<Image>().sprite = stampSprite;
+                        image.sprite = stampSprite;
                         dragOffset = Vector3.zero;
                         rectTransform.position = mousePosition + dragOffset;
                         isStampOnLetter = true;
@@ -580,7 +496,7 @@ namespace Game.Desk
                     else
                     {
                         rectTransform.DORotate(new Vector3(0, 0, 0), 0.3f).SetEase(Ease.OutQuad);
-                        GetComponent<Image>().sprite = deskSprite;
+                        image.sprite = deskSprite;
                         isStampOnLetter = false;
                     }
                 }
@@ -663,7 +579,7 @@ namespace Game.Desk
                 // GetComponent<Payment>().IsPlacedOnDesk = false;
                 currentParent = rightUI;
                 rectTransform.SetParent(currentParent, true);
-                // GetComponent<Image>().sprite = rightUISprite;
+                // image.sprite = rightUISprite;
                 rectTransform.localScale = new Vector3(rightUIScale.x, rightUIScale.x, 1);
                 rectTransform.position = CanvasManager.Instance.GetUIPositionOfObject(objectType, this).position;
                 rectTransform.localRotation = Quaternion.identity;
@@ -678,7 +594,7 @@ namespace Game.Desk
                 // GetComponent<Payment>().IsPlacedOnDesk = false;
                 currentParent = rightUI;
                 rectTransform.SetParent(currentParent, true);
-                // GetComponent<Image>().sprite = rightUISprite;
+                // image.sprite = rightUISprite;
                 rectTransform.localScale = new Vector3(rightUIScale.x, rightUIScale.x, 1);
                 rectTransform.position = CanvasManager.Instance.GetUIPositionOfObject(objectType, this).position;
                 rectTransform.localRotation = Quaternion.identity;

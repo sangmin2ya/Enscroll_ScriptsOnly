@@ -9,10 +9,15 @@ using Unity.VisualScripting;
 
 namespace Game.Desk
 {
-    public class Payment : MonoBehaviour, IPointerClickHandler
+    public class Payment : MonoBehaviour, IPointerClickHandler, IDeskItem
     {
         [Header("책상 위치")]
         private bool _isPlacedOnDesk = true;
+        // IDeskItem: DragableObject가 제출/서랍 복귀 시 호출
+        bool IDeskItem.CanSubmit => Game.Request.RequestManager.Instance.isPaymentDay;
+        void IDeskItem.OnSubmitted() { SendPayment(); }
+        void IDeskItem.OnReturnedToDrawer() { }
+
         public bool IsPlacedOnDesk
         {
             get { return _isPlacedOnDesk; }
